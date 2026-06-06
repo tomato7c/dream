@@ -45,11 +45,6 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.showAddTaskDialog() }) {
-                Icon(Icons.Default.Add, contentDescription = "添加任务")
-            }
         }
     ) { paddingValues ->
         Column(
@@ -84,12 +79,20 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                 }
             }
 
-            Text(
-                text = "任务列表",
-                fontSize = 18.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "任务列表",
+                    fontSize = 18.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+                IconButton(onClick = { viewModel.showAddTaskDialog() }) {
+                    Icon(Icons.Default.Add, contentDescription = "添加任务")
+                }
+            }
 
             if (tasks.isEmpty()) {
                 Card(
@@ -100,11 +103,11 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
-                    Text(
-                        text = "暂无任务，点击右下角按钮添加任务",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                     Text(
+                         text = "暂无任务，点击右侧按钮添加任务",
+                         modifier = Modifier.padding(16.dp),
+                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                     )
                 }
             } else {
                 LazyColumn(
