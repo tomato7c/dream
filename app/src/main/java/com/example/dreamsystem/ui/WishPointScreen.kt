@@ -37,6 +37,9 @@ fun WishPointScreen(viewModel: TaskViewModel) {
     val taskPoints by viewModel.newTaskPoints.collectAsState()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
     
+    var showCompleteConfirmDialog by remember { mutableStateOf(false) }
+    var taskToComplete by remember { mutableStateOf<Task?>(null) }
+    
     var pointsText by remember { mutableStateOf("") }
     val context = LocalContext.current
     
@@ -49,12 +52,12 @@ fun WishPointScreen(viewModel: TaskViewModel) {
             TopAppBar(
                 title = { Text("心愿积分") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = androidx.compose.ui.graphics.Color(0xFFA8E6CF),
+                    titleContentColor = androidx.compose.ui.graphics.Color.Black
                 ),
                 actions = {
                     IconButton(onClick = { viewModel.showSettingsDialog() }) {
-                        Icon(Icons.Default.Settings, contentDescription = "设置")
+                        Icon(Icons.Default.Settings, contentDescription = "设置", tint = androidx.compose.ui.graphics.Color.Black)
                     }
                 }
             )
@@ -131,7 +134,10 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                     items(tasks) { task ->
                         TaskItem(
                             task = task,
-                            onComplete = { viewModel.completeTask(task) },
+                            onComplete = {
+                                taskToComplete = task
+                                showCompleteConfirmDialog = true
+                            },
                             onDelete = { viewModel.deleteTask(task) }
                         )
                     }
@@ -147,23 +153,31 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            LazyColumn(
+            Card(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = androidx.compose.ui.graphics.Color(0xFFE0E0E0)
+                )
             ) {
-                items(
-                    count = pointRecords.itemCount,
-                    key = { index -> pointRecords[index]?.id ?: index }
-                ) { index ->
-                    val record = pointRecords[index]
-                    record?.let {
-                        PointRecordItem(
-                            taskDescription = it.taskDescription,
-                            points = it.points,
-                            timestamp = it.timestamp,
-                            onDelete = { viewModel.deletePointRecord(it) }
-                        )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    items(
+                        count = pointRecords.itemCount,
+                        key = { index -> pointRecords[index]?.id ?: index }
+                    ) { index ->
+                        val record = pointRecords[index]
+                        record?.let {
+                            PointRecordItem(
+                                taskDescription = it.taskDescription,
+                                points = it.points,
+                                timestamp = it.timestamp,
+                                onDelete = { viewModel.deletePointRecord(it) }
+                            )
+                        }
                     }
                 }
             }
@@ -193,4 +207,34 @@ fun WishPointScreen(viewModel: TaskViewModel) {
             }
         }
     )
+
+    if (showCompleteConfirmDialog && taskToComplete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showCompleteConfirmDialog = false
+                taskToComplete = null
+            },
+            title = { Text("确认完成任务") },
+            text = {
+                Text("确定要完成\"${taskToComplete?.description}\"并获得${taskToComplete?.points}积分吗？")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    taskToComplete?.let { viewModel.completeTask(it) }
+                    showCompleteConfirmDialog = false
+                    taskToComplete = null
+                }) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showCompleteConfirmDialog = false
+                    taskToComplete = null
+                }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
 }

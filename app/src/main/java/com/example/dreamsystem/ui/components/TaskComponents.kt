@@ -48,7 +48,7 @@ fun TaskItem(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "+${task.points} 积分",
+                    text = "${task.points} 积分",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -84,11 +84,10 @@ fun PointRecordItem(
     SwipeToDeleteItem(
         onDelete = onDelete
     ) {
-        Card(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                .background(androidx.compose.ui.graphics.Color(0xFFE8E8E8))
         ) {
             Row(
                 modifier = Modifier
@@ -100,19 +99,20 @@ fun PointRecordItem(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = taskDescription,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = androidx.compose.ui.graphics.Color.Black
                     )
                     Text(
                         text = dateStr,
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = androidx.compose.ui.graphics.Color.DarkGray
                     )
                 }
                 Text(
                     text = if (points > 0) "+$points" else "$points",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (points > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                    color = if (points > 0) androidx.compose.ui.graphics.Color(0xFF4CAF50) else androidx.compose.ui.graphics.Color(0xFFD32F2F)
                 )
             }
         }
@@ -130,11 +130,12 @@ fun SwipeToDeleteItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .background(androidx.compose.ui.graphics.Color(0xFFE8E8E8))
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp)
+                .matchParentSize()
                 .background(backgroundColor)
                 .clickable(onClick = onDelete),
             contentAlignment = Alignment.CenterEnd
@@ -154,7 +155,7 @@ fun SwipeToDeleteItem(
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures { _, dragAmount ->
                         val newOffset = offsetX + dragAmount
-                        offsetX = newOffset.coerceIn(-150f, 0f)
+                        offsetX = newOffset.coerceIn(-200f, 0f)
                     }
                 }
         ) {
