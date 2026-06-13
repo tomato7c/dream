@@ -209,3 +209,32 @@ fun AddTaskDialog(
         )
     }
 }
+
+@Composable
+fun SettingsDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onExportToExcel: () -> Unit
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("设置") },
+            text = {
+                Column {
+                    Button(
+                        onClick = onExportToExcel,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("导出积分流水为Excel")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("关闭")
+                }
+            }
+        )
+    }
+}

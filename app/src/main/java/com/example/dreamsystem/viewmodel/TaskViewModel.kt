@@ -30,6 +30,9 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     private val _showAddTaskDialog = MutableStateFlow(false)
     val showAddTaskDialog: StateFlow<Boolean> = _showAddTaskDialog.asStateFlow()
 
+    private val _showSettingsDialog = MutableStateFlow(false)
+    val showSettingsDialog: StateFlow<Boolean> = _showSettingsDialog.asStateFlow()
+
     private val _newTaskDescription = MutableStateFlow("")
     val newTaskDescription: StateFlow<String> = _newTaskDescription.asStateFlow()
 
@@ -44,6 +47,14 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         _showAddTaskDialog.value = false
         _newTaskDescription.value = ""
         _newTaskPoints.value = 0
+    }
+
+    fun showSettingsDialog() {
+        _showSettingsDialog.value = true
+    }
+
+    fun hideSettingsDialog() {
+        _showSettingsDialog.value = false
     }
 
     fun updateTaskDescription(description: String) {
@@ -85,5 +96,9 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.deletePointRecord(record)
         }
+    }
+
+    suspend fun getAllPointRecords(): List<PointRecord> {
+        return repository.getAllPointRecords()
     }
 }

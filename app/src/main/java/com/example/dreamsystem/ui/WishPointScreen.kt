@@ -5,19 +5,25 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.dreamsystem.data.PointRecord
 import com.example.dreamsystem.data.Task
 import com.example.dreamsystem.ui.components.*
+import com.example.dreamsystem.utils.ExportUtils
 import com.example.dreamsystem.viewmodel.TaskViewModel
-import java.util.Locale
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,8 +35,10 @@ fun WishPointScreen(viewModel: TaskViewModel) {
     val showAddTaskDialog by viewModel.showAddTaskDialog.collectAsState()
     val taskDescription by viewModel.newTaskDescription.collectAsState()
     val taskPoints by viewModel.newTaskPoints.collectAsState()
+    val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
     
     var pointsText by remember { mutableStateOf("") }
+    val context = LocalContext.current
     
     LaunchedEffect(taskPoints) {
         pointsText = taskPoints.toString()
@@ -43,7 +51,12 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                ),
+                actions = {
+                    IconButton(onClick = { viewModel.showSettingsDialog() }) {
+                        Icon(Icons.Default.Settings, contentDescription = "设置")
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -168,5 +181,16 @@ fun WishPointScreen(viewModel: TaskViewModel) {
         },
         onDismiss = { viewModel.hideAddTaskDialog() },
         onConfirm = { viewModel.addTask() }
+    )
+
+    SettingsDialog(
+        showDialog = showSettingsDialog,
+        onDismiss = { viewModel.hideSettingsDialog() },
+        onExportToExcel = {
+            viewModel.viewModelScope.launch {
+                val records = viewModel.getAllPointRecords()
+                ExportUtils.exportToExcel(context, records)
+            }
+        }
     )
 }

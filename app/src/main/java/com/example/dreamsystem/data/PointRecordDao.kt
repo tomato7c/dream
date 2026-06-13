@@ -13,6 +13,9 @@ interface PointRecordDao {
     @Query("SELECT * FROM point_records ORDER BY timestamp DESC")
     fun getPointRecordsPaged(): PagingSource<Int, PointRecord>
 
+    @Query("SELECT * FROM point_records ORDER BY timestamp DESC")
+    suspend fun getAllPointRecords(): List<PointRecord>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPointRecord(record: PointRecord): Long
 

@@ -54,4 +54,8 @@ class TaskRepository(private val taskDao: TaskDao, private val pointRecordDao: P
     fun getTotalPoints(): Flow<Int> {
         return pointRecordDao.getTotalPointsFlow().map { it ?: 0 }
     }
+
+    suspend fun getAllPointRecords(): List<PointRecord> {
+        return pointRecordDao.getAllPointRecords()
+    }
 }
