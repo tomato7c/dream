@@ -48,6 +48,7 @@ fun WishPointScreen(viewModel: TaskViewModel) {
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text("心愿积分") },
@@ -73,7 +74,9 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             ) {
                 Column(
                     modifier = Modifier
@@ -116,14 +119,14 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
-                     Text(
-                         text = "暂无任务，点击右侧按钮添加任务",
-                         modifier = Modifier.padding(16.dp),
-                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                     )
+                      Text(
+                          text = "暂无任务，点击右侧按钮添加任务",
+                          modifier = Modifier.padding(16.dp),
+                          color = MaterialTheme.colorScheme.onSurfaceVariant
+                      )
                 }
             } else {
                 LazyColumn(
@@ -140,6 +143,7 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                             },
                             onDelete = { viewModel.deleteTask(task) }
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
@@ -158,7 +162,7 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                     .weight(1f)
                     .fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = androidx.compose.ui.graphics.Color(0xFFE0E0E0)
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             ) {
                 LazyColumn(
