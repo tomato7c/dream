@@ -2,7 +2,10 @@ package com.example.dreamsystem.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
@@ -39,6 +42,8 @@ fun WishPointScreen(viewModel: TaskViewModel) {
     
     var showCompleteConfirmDialog by remember { mutableStateOf(false) }
     var taskToComplete by remember { mutableStateOf<Task?>(null) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var taskToDelete by remember { mutableStateOf<Task?>(null) }
     
     var pointsText by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -117,7 +122,9 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .wrapContentHeight(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     )
@@ -129,21 +136,38 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                       )
                 }
             } else {
-                LazyColumn(
+                Card(
                     modifier = Modifier
-                        .weight(1f)
                         .fillMaxWidth()
+                        .wrapContentHeight()
+                        .heightIn(max = 400.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
-                    items(tasks) { task ->
-                        TaskItem(
-                            task = task,
-                            onComplete = {
-                                taskToComplete = task
-                                showCompleteConfirmDialog = true
-                            },
-                            onDelete = { viewModel.deleteTask(task) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(tasks) { task ->
+                            TaskItem(
+                                task = task,
+                                onComplete = {
+                                    taskToComplete = task
+                                    showCompleteConfirmDialog = true
+                                },
+                                onDelete = {
+                                    taskToDelete = task
+                                    showDeleteConfirmDialog = true
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -235,6 +259,36 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                 TextButton(onClick = {
                     showCompleteConfirmDialog = false
                     taskToComplete = null
+                }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirmDialog && taskToDelete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteConfirmDialog = false
+                taskToDelete = null
+            },
+            title = { Text("确认删除任务") },
+            text = {
+                Text("确定要删除任务\"${taskToDelete?.description}\"吗？")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    taskToDelete?.let { viewModel.deleteTask(it) }
+                    showDeleteConfirmDialog = false
+                    taskToDelete = null
+                }) {
+                    Text("删除")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDeleteConfirmDialog = false
+                    taskToDelete = null
                 }) {
                     Text("取消")
                 }
