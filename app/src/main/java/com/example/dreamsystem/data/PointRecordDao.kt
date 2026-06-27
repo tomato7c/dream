@@ -19,6 +19,9 @@ interface PointRecordDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPointRecord(record: PointRecord): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(records: List<PointRecord>)
+
     @Delete
     suspend fun deletePointRecord(record: PointRecord)
 

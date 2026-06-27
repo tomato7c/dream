@@ -1,7 +1,11 @@
 package com.example.dreamsystem.ui
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -24,7 +28,11 @@ import com.example.dreamsystem.data.Task
 import com.example.dreamsystem.ui.components.*
 import com.example.dreamsystem.utils.ExportUtils
 import com.example.dreamsystem.viewmodel.TaskViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,6 +47,16 @@ fun WishPointScreen(viewModel: TaskViewModel) {
     val taskDescription by viewModel.newTaskDescription.collectAsState()
     val taskPoints by viewModel.newTaskPoints.collectAsState()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
+
+    val showAddRecordDialog by viewModel.showAddRecordDialog.collectAsState()
+    val recordDescription by viewModel.newRecordDescription.collectAsState()
+    val recordPoints by viewModel.newRecordPoints.collectAsState()
+
+    val infrequentTasks by viewModel.infrequentTasks.collectAsState(initial = emptyList())
+    val showInfrequentDialog by viewModel.showInfrequentDialog.collectAsState()
+    val showAddInfrequentDialog by viewModel.showAddInfrequentDialog.collectAsState()
+    val infrequentDescription by viewModel.newInfrequentDescription.collectAsState()
+    val infrequentPointsText by viewModel.newInfrequentPointsText.collectAsState()
     
     var showCompleteConfirmDialog by remember { mutableStateOf(false) }
     var taskToComplete by remember { mutableStateOf<Task?>(null) }
@@ -47,6 +65,40 @@ fun WishPointScreen(viewModel: TaskViewModel) {
     
     var pointsText by remember { mutableStateOf("") }
     val context = LocalContext.current
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            viewModel.viewModelScope.launch {
+                try {
+                    val records = withContext(Dispatchers.IO) {
+                        val tempFile = File(context.cacheDir, "import_temp.xls")
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            FileOutputStream(tempFile).use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                        ExportUtils.importFromExcel(tempFile)
+                    }
+                    if (records.isEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "未找到有效的积分流水数据", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        viewModel.importPointRecords(records)
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "成功导入 ${records.size} 条记录", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "导入失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
     
     LaunchedEffect(taskPoints) {
         pointsText = taskPoints.toString()
@@ -56,7 +108,7 @@ fun WishPointScreen(viewModel: TaskViewModel) {
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("心愿积分") },
+                title = { Text("dream point") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = androidx.compose.ui.graphics.Color(0xFFA8E6CF),
                     titleContentColor = androidx.compose.ui.graphics.Color.Black
@@ -116,6 +168,10 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                 IconButton(onClick = { viewModel.showAddTaskDialog() }) {
                     Icon(Icons.Default.Add, contentDescription = "添加任务")
                 }
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { viewModel.showInfrequentDialog() }) {
+                    Text("更多", fontSize = 13.sp)
+                }
             }
 
             if (tasks.isEmpty()) {
@@ -174,12 +230,20 @@ fun WishPointScreen(viewModel: TaskViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "积分流水",
-                fontSize = 18.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "积分流水",
+                    fontSize = 18.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+                IconButton(onClick = { viewModel.showAddRecordDialog() }) {
+                    Icon(Icons.Default.Add, contentDescription = "添加流水")
+                }
+            }
 
             Card(
                 modifier = Modifier
@@ -225,6 +289,42 @@ fun WishPointScreen(viewModel: TaskViewModel) {
         onConfirm = { viewModel.addTask() }
     )
 
+    if (showAddRecordDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideAddRecordDialog() },
+            title = { Text("添加流水") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = recordDescription,
+                        onValueChange = { viewModel.updateRecordDescription(it) },
+                        label = { Text("描述") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = recordPoints,
+                        onValueChange = { viewModel.updateRecordPoints(it) },
+                        label = { Text("积分（正数增加，负数扣减）") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.addPointRecord() }) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideAddRecordDialog() }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
     SettingsDialog(
         showDialog = showSettingsDialog,
         onDismiss = { viewModel.hideSettingsDialog() },
@@ -233,6 +333,9 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                 val records = viewModel.getAllPointRecords()
                 ExportUtils.exportToExcel(context, records)
             }
+        },
+        onImportFromExcel = {
+            importLauncher.launch(arrayOf("application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "*/*"))
         }
     )
 
@@ -290,6 +393,89 @@ fun WishPointScreen(viewModel: TaskViewModel) {
                     showDeleteConfirmDialog = false
                     taskToDelete = null
                 }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    // 不常用任务列表弹窗
+    if (showInfrequentDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideInfrequentDialog() },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("不常用任务", modifier = Modifier.weight(1f))
+                    IconButton(onClick = { viewModel.showAddInfrequentDialog() }) {
+                        Icon(Icons.Default.Add, contentDescription = "添加不常用任务")
+                    }
+                }
+            },
+            text = {
+                if (infrequentTasks.isEmpty()) {
+                    Text("暂无不常用任务，点击右上角添加")
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        items(infrequentTasks) { task ->
+                            TaskItem(
+                                task = task,
+                                onComplete = {
+                                    taskToComplete = task
+                                    showCompleteConfirmDialog = true
+                                },
+                                onDelete = {
+                                    taskToDelete = task
+                                    showDeleteConfirmDialog = true
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.hideInfrequentDialog() }) {
+                    Text("关闭")
+                }
+            }
+        )
+    }
+
+    // 添加不常用任务弹窗
+    if (showAddInfrequentDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideAddInfrequentDialog() },
+            title = { Text("添加不常用任务") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = infrequentDescription,
+                        onValueChange = { viewModel.updateInfrequentDescription(it) },
+                        label = { Text("任务描述") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = infrequentPointsText,
+                        onValueChange = { viewModel.updateInfrequentPoints(it) },
+                        label = { Text("积分") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.addInfrequentTask() }) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideAddInfrequentDialog() }) {
                     Text("取消")
                 }
             }

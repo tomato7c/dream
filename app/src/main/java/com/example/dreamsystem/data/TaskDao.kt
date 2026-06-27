@@ -9,6 +9,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskDao {
+    @Query("SELECT * FROM tasks WHERE frequent = 1")
+    fun getFrequentTasks(): Flow<List<Task>>
+
+    @Query("SELECT * FROM tasks WHERE frequent = 0")
+    fun getInfrequentTasks(): Flow<List<Task>>
+
     @Query("SELECT * FROM tasks")
     fun getAllTasks(): Flow<List<Task>>
 

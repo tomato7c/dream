@@ -13,6 +13,14 @@ import kotlinx.coroutines.flow.map
 
 class TaskRepository(private val taskDao: TaskDao, private val pointRecordDao: PointRecordDao) {
 
+    fun getFrequentTasks(): Flow<List<Task>> {
+        return taskDao.getFrequentTasks()
+    }
+
+    fun getInfrequentTasks(): Flow<List<Task>> {
+        return taskDao.getInfrequentTasks()
+    }
+
     fun getAllTasks(): Flow<List<Task>> {
         return taskDao.getAllTasks()
     }
@@ -41,6 +49,10 @@ class TaskRepository(private val taskDao: TaskDao, private val pointRecordDao: P
 
     suspend fun insertPointRecord(record: PointRecord): Long {
         return pointRecordDao.insertPointRecord(record)
+    }
+
+    suspend fun insertAllPointRecords(records: List<PointRecord>) {
+        pointRecordDao.insertAll(records)
     }
 
     suspend fun deletePointRecord(record: PointRecord) {

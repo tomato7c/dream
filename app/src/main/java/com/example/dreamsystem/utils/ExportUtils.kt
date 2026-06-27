@@ -20,6 +20,36 @@ import java.util.Date
 import java.util.Locale
 
 object ExportUtils {
+    fun importFromExcel(file: File): List<PointRecord> {
+        val records = mutableListOf<PointRecord>()
+        val workbook = Workbook.getWorkbook(file)
+        val sheet = workbook.getSheet(0)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
+        for (row in 1 until sheet.rows) {
+            try {
+                val description = sheet.getCell(1, row)?.contents ?: continue
+                val pointsStr = sheet.getCell(2, row)?.contents ?: continue
+                val timeStr = sheet.getCell(3, row)?.contents ?: continue
+                val points = pointsStr.toIntOrNull() ?: continue
+                val timestamp = try {
+                    dateFormat.parse(timeStr)?.time ?: System.currentTimeMillis()
+                } catch (e: Exception) {
+                    System.currentTimeMillis()
+                }
+                records.add(PointRecord(
+                    taskDescription = description,
+                    points = points,
+                    timestamp = timestamp
+                ))
+            } catch (e: Exception) {
+                continue
+            }
+        }
+        workbook.close()
+        return records
+    }
+
     suspend fun exportToExcel(context: Context, records: List<PointRecord>): String? = withContext(Dispatchers.IO) {
         try {
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())

@@ -63,29 +63,28 @@ fun TaskItem(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 IconButton(
                     onClick = onComplete,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "完成任务",
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
                 IconButton(
                     onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "删除任务",
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
@@ -237,19 +236,26 @@ fun AddTaskDialog(
 fun SettingsDialog(
     showDialog: Boolean,
     onDismiss: () -> Unit,
-    onExportToExcel: () -> Unit
+    onExportToExcel: () -> Unit,
+    onImportFromExcel: () -> Unit
 ) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
             title = { Text("设置") },
             text = {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = onExportToExcel,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("导出积分流水为Excel")
+                    }
+                    Button(
+                        onClick = onImportFromExcel,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("从Excel导入积分流水")
                     }
                 }
             },
